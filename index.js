@@ -4,18 +4,18 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('./models/user');
-const authenticateToken = require('./middlewares/auth');
+const {protect}=require('./middlewares/auth')
+const connectDB=require('./DB/connect')
 
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT|| 5000
 
-app.use(bodyParser.json());
+app.use(express.json());
 
-mongoose.connect('mongodb+srv://footprint-manager:footpr%21nt%40123@cluster0.9zjapyn.mongodb.net/footprint-project-management?retryWrites=true&w=majority', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+// mongoose.connect('mongodb+srv://footprint-manager:footpr%21nt%40123@cluster0.9zjapyn.mongodb.net/footprint-project-management?retryWrites=true&w=majority', 
+//   {useNewUrlParser: true}
+// );
 
 
 app.post('/register', async (req, res) => {
@@ -51,12 +51,22 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.get('/protected', authenticateToken, (req, res) => {
+app.get('/protected', protect, (req, res) => {
   res.json({ message: 'This is a protected route', user: req.user });
 });
 
 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
+const start = async () => {
+  try {
+      await connectDB('mongodb+srv://footprint-manager:footpr%21nt%40123@cluster0.9zjapyn.mongodb.net/footprint-project-management?retryWrites=true&w=majority')
+      await app.listen(port, () => {
+          console.log(`Example app listening on port ${port}`)
+      })
+  }
+  catch (error) {
+      console.log(error)
+  }
+}
+
+start()
   
