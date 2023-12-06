@@ -12,6 +12,7 @@ async function submitProjectApplication(req, res) {
             title,
             description,
             status: 'Review',
+            start_date,
             end_date,
             manager_id: user.user_id,
             reviewer_id: null,

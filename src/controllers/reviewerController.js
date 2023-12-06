@@ -1,10 +1,11 @@
-const User = require("../models/user")
+const Reviewer = require("../models/reviewer")
 const { validationResult } = require("express-validator")
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const util = require('util');
 const jwtVerify = util.promisify(jwt.verify);
 require('express-jwt');
+
 
 exports.signup = (req, res) => {
     const errors = validationResult(req)
@@ -14,27 +15,26 @@ exports.signup = (req, res) => {
         })
     }
 
-    const { name, email, mobile, provinceName, provincialSuperiorName, apostolate, password } = req.body
+    const { name, email, mobile, provinceName, password } = req.body
 
-    if (!email || !password || !name || !mobile || !provinceName || !provincialSuperiorName || !apostolate) {
+    if (!email || !password || !name || !mobile || !provinceName) {
         return res.status(400).json({
             error: "Data Incomplete",
         })
     }
 
-    User.findOne({ email }).exec()
-        .then((user) => {
-            if (user) {
+    Reviewer.findOne({ email }).exec()
+        .then((reviewer) => {
+            if (reviewer) {
                 res.status(400).json({
                     message: "User Already Exists"
                 })
             }
 
-            if (!user) {
+            if (!reviewer) {
                 const otp = Math.floor(((Math.random() * 1000000) + 100000) % 1000000);
 
-                const token = jwt.sign({ name: name, email: email, mobile: mobile, provinceName: provinceName, 
-                    provincialSuperiorName: provincialSuperiorName, apostolate: apostolate, password: password, otpCoded: otp }, process.env.JWT_SECRET)
+                const token = jwt.sign({ name: name, email: email, mobile: mobile, provinceName: provinceName, password: password, otpCoded: otp }, process.env.JWT_SECRET)
 
                 const transporter = nodemailer.createTransport({
                     service: 'gmail',
@@ -73,7 +73,6 @@ exports.signup = (req, res) => {
         });
 }
 
-
 exports.verify_email = async (req, res) => {
     const { token, otp } = req.body;
 
@@ -84,16 +83,16 @@ exports.verify_email = async (req, res) => {
 
         const decodedToken = await jwtVerify(token, process.env.JWT_SECRET);
 
-        const { name, email, mobile, provinceName, provincialSuperiorName, apostolate, password, otpCoded } = decodedToken;
-        console.log(decodedToken);
+        const { name, email, mobile, provinceName, password, otpCoded } = decodedToken;
+
         if (otp.toString() === otpCoded.toString()) {
+            const reviewer = new Reviewer({ name, email, mobile, provinceName, password });
 
-            const user = new User({ name, email, mobile, provinceName, provincialSuperiorName, apostolate, password });
+            const savedReviewer = await reviewer.save();
 
-            const savedUser = await user.save();
             return res.status(200).json({
                 message: "User Registered. Signin to Continue",
-                user: savedUser
+                reviewer: savedReviewer
             });
         }
     } catch (error) {
@@ -104,9 +103,6 @@ exports.verify_email = async (req, res) => {
     }
 };
 
-
-
-
 exports.signin = (req, res) => {
     const { email, password } = req.body
 
@@ -115,29 +111,33 @@ exports.signin = (req, res) => {
             error: "Data Incomplete",
         })
     }
-    User.findOne({ email }).exec()
-        .then((user) => {
-            if (!user) {
+    Reviewer.findOne({ email }).exec()
+        .then((reviewer) => {
+            if (!reviewer) {
                 return res.status(400).json({
                     error: "Email was not found"
                 })
             }
 
-            if (!user.authenticate(password)) {
+            if (!reviewer.authenticate(password)) {
                 return res.status(400).json({
                     error: "Email and password do not match"
                 })
             }
 
-            const token = jwt.sign({ _id: user._id, userType: 'Applicant/Manager' }, process.env.JWT_SECRET)
+            const token = jwt.sign({ _id: reviewer._id, userType: 'Reviewer' }, process.env.JWT_SECRET)
 
             res.cookie('token', token, { expire: new Date() + 1 })
 
-            const { _id, name, email, mobile, provinceName, provincialSuperiorName, apostolate } = user
+            const { _id, name, email, mobile, provinceName } = reviewer
             return res.json({
                 token,
-                user: {
-                    _id, name, email, mobile, provinceName, provincialSuperiorName, apostolate
+                reviewer: {
+                    _id,
+                    name,
+                    email,
+                    mobile,
+                    provinceName
                 }
             })
 
@@ -155,4 +155,4 @@ exports.signout = (req, res) => {
     return res.json({
         message: "User sign out successful"
     })
-} 
+}

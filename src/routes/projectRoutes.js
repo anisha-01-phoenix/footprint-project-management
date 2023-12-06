@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
+const { authenticateToken, authorizeRole } = require('../middleware/userMiddleware');
 const {
   submitProjectApplication,
   reviewProjectApplication,

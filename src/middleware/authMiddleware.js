@@ -1,28 +1,39 @@
-const jwt = require('jsonwebtoken');
-const config = require('../../config');
-const User = require('../models/user');
+const jwt = require("jsonwebtoken")
+const Approver = require("../models/approver")
+const Reviewer = require("../models/reviewer")
+const User = require("../models/user")
+require('express-jwt');
 
-async function authenticateToken(req, res, next) {
-    const token = req.header('Authorization');
-    if (!token) return res.status(401).json({ message: 'Access denied. Token is missing.' });
-
+const auth = async (req, res, next) => {
     try {
-        const decoded = jwt.verify(token, config.jwtSecret);
-        req.user = decoded.user;
-        next();
-    } catch (error) {
-        res.status(401).json({ message: 'Invalid token.' });
+        const token = req.header("Authorization").replace('Bearer ', '')
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET)
+        Approver.findOne({ '_id': decodedToken._id }, (err, approver) => {
+            if (err || !approver) {
+                Reviewer.findOne({ '_id': decodedToken._id }, (err, reviewer) => {
+                    if (err || !reviewer) {
+                        User.findOne({ '_id': decodedToken._id }, (err, user) => {
+                            if (err || !user) {
+                                res.status(401).send({
+                                    error: "Please Authenticate"
+                                })
+                            } else {
+                                next()
+                            }
+                        })
+                    } else {
+                        next()
+                    }
+                })
+            } else {
+                next()
+            }
+        })
+    } catch (e) {
+        res.status(401).send({
+            error: "Please Authenticate"
+        })
     }
 }
 
-async function authorizeRole(role) {
-    return (req, res, next) => {
-        if (req.user && req.user.role === role) {
-            next();
-        } else {
-            res.status(403).json({ message: 'Forbidden. Insufficient role.' });
-        }
-    };
-}
-
-module.exports = { authenticateToken, authorizeRole };
+module.exports = auth
