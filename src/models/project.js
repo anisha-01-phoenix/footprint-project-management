@@ -8,32 +8,32 @@ const projectSchema = new mongoose.Schema({
     description: {
         type: String
     },
-    status: {
-        type: String,
-        enum: ["Review", "Approved", "Rejected", "Ongoing", "Completed"],
-        required: true
-    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user',
         required: true,
     },
+    status: {
+        type: String,
+        enum: ["Review", "Approved", "Rejected", "Ongoing", "Completed"],
+        required: true
+    },
     apostolate: {
         type: String,
         required: true,
     },
-    documents: [
+    documents: 
         {
-            name: {
+            // name: {
                 type: String,
                 required: true,
-            },
-            file: {
-                type: Buffer,
-                required: true,
-            },
+            // },
+            // file: {
+            //     type: Buffer,
+            //     required: true,
+            // },
         },
-    ],
+    
 });
 
 module.exports = mongoose.model('Project', projectSchema);;

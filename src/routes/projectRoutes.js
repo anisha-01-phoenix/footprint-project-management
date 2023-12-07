@@ -1,15 +1,30 @@
-// const express = require('express');
-// const router = express.Router();
-// const userMiddleware = require('../middleware/userMiddleware');
-// const projectController = require('../controllers/projectController');
+const express = require('express');
+const router = express.Router();
+const { 
+    createProject, 
+    editProject, 
+    deleteProject, 
+    getAllUserProjects, 
+    getAllProjectsbyApostolate,  
+    getAllProjects} = require('../controllers/projectController');
+const userAuth = require('../middleware/userMiddleware');
+const auth = require('../middleware/authMiddleware');
 
-// // Routes for handling project-related operations
+// Create Project
+router.post('/create', userAuth, createProject);
 
-// router.get('/projects', userMiddleware, projectController.getAllProjects);
-// router.get('/projects/:projectId', userMiddleware, projectController.getProjectDetails);
-// router.post('/projects', userMiddleware, projectController.createProject);
-// router.put('/projects/:projectId', userMiddleware, projectController.updateProject);
-// router.delete('/projects/:projectId', userMiddleware, projectController.deleteProject);
+// Edit Project
+router.put('/edit/:projectId', auth, editProject);
 
-// module.exports = router;
+// Delete Project
+router.delete('/delete/:projectId', auth, deleteProject);
 
+// Show all Projects for the currently logged-in user
+router.get('/allUserProjects', userAuth, getAllUserProjects);
+
+// Show all Projects for a specific apostolate 
+router.post('/allProjectsByApostolate', auth, getAllProjectsbyApostolate);
+
+router.get('/allProjects', auth, getAllProjects);
+
+module.exports = router;
