@@ -3,7 +3,12 @@ const crypto = require("crypto");
 const { v4: uuidv4 } = require('uuid');
 
 const userSchema = new mongoose.Schema({
-    name: {
+    user_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: mongoose.Types.ObjectId,
+        unique: true,
+    },
+    username: {
         type: String,
         required: true,
         maxlength: 32,
@@ -17,9 +22,7 @@ const userSchema = new mongoose.Schema({
     },
     mobile: {
         type: String,
-        trim: true,
-        required: true,
-        unique: true
+        required: true
     },
     provinceName: {
         type: String,

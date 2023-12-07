@@ -1,92 +1,140 @@
 const Project = require('../models/project');
-const User = require('../models/user');
-const ProjectDocument = require('../models/projectDocument');
 
-async function submitProjectApplication(req, res) {
+exports.uploadProject = async (req, res) => {
     try {
-        const { title, description, start_date, end_date, documents } = req.body;
+        // Assuming project details are sent as part of the request body
+        const { title, description, documents } = req.body;
 
-        const user = await User.findById(req.user.id);
+        // Extract the uploaded file from the request
+        const projectFile = req.file.buffer;
 
-        const newProject = new Project({
+        // Get the user ID from the authenticated user
+        const userId = req.user._id;
+
+        // Check if the authenticated user is a regular user (not a reviewer or approver)
+        if (req.user.role !== 'user') {
+            return res.status(403).send({ error: 'Unauthorized. Only users can create projects.' });
+        }
+
+        // Create a new project instance
+        const project = new Project({
             title,
             description,
-            status: 'Review',
-            start_date,
-            end_date,
-            manager_id: user.user_id,
-            reviewer_id: null,
-            approver_id: null,
+            status: 'Review', // Initial status when uploading a project
+            user_id: userId,
+            documents: JSON.parse(documents), // Parse the documents JSON string
         });
 
-        await newProject.save();
+        // Add the uploaded file to the documents array
+        project.documents.push({
+            name: 'Project File', // Set a default name or provide a name in the request
+            file: projectFile,
+        });
 
-        if (documents && documents.length > 0) {
-            for (const document of documents) {
-                const newDocument = new ProjectDocument({
-                    project_id: newProject.project_id,
-                    document_name: document.name,
-                    document_path: document.path,
-                    uploaded_by: user.user_id,
-                });
-
-                await newDocument.save();
-            }
-        }
-
-        res.status(201).json({ message: 'Project application submitted successfully.' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-}
-
-async function reviewProjectApplication(req, res) {
-    try {
-        const { projectId, comments, status } = req.body;
-
-        const project = await Project.findById(projectId);
-
-        if (project.reviewer_id !== req.user.id) {
-            return res.status(403).json({ message: 'You are not authorized to review this project.' });
-        }
-
-        project.status = status;
-        project.comments = comments;
-
+        // Save the project to the database
         await project.save();
 
-        res.json({ message: 'Project application reviewed successfully.' });
+        res.status(201).send({ message: 'Project uploaded successfully!' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).send({ error: 'Internal Server Error' });
     }
-}
+};
 
-async function approveOrRejectProjectApplication(req, res) {
+
+exports.updateProject = async (req, res) => {
     try {
-        const { projectId, comments, status } = req.body;
+        // Assuming project details are sent as part of the request body
+        const { projectId, title, description, status, start_date, end_date, documents } = req.body;
 
-        const project = await Project.findById(projectId);
-
-        if (project.approver_id !== req.user.id) {
-            return res.status(403).json({ message: 'You are not authorized to approve or reject this project.' });
+        // Check if the authenticated user is a reviewer or approver
+        if (req.user.role !== 'reviewer' && req.user.role !== 'approver') {
+            return res.status(403).send({ error: 'Unauthorized. Reviewers and Approvers can update projects.' });
         }
 
-        project.status = status;
-        project.comments = comments;
+        // Find the project by ID
+        const project = await Project.findById(projectId);
 
+        // Check if the project exists
+        if (!project) {
+            return res.status(404).send({ error: 'Project not found.' });
+        }
+
+        // Update all fields
+        project.title = title;
+        project.description = description;
+        project.status = status;
+        project.start_date = start_date;
+        project.end_date = end_date;
+        project.documents = JSON.parse(documents); // Parse the documents JSON string
+
+        // Save the updated project to the database
         await project.save();
 
-        res.json({ message: 'Project application approved or rejected successfully.' });
+        res.status(200).send({ message: 'Project updated successfully!' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).send({ error: 'Internal Server Error' });
     }
-}
+};
 
-module.exports = {
-    submitProjectApplication,
-    reviewProjectApplication,
-    approveOrRejectProjectApplication,
+
+exports.reviewProject = async (req, res) => {
+    try {
+        const { projectId, reviewerId } = req.body;
+
+        // Check if the authenticated user is a reviewer
+        if (req.user.role !== 'reviewer') {
+            return res.status(403).send({ error: 'Unauthorized. Only Reviewers can review projects.' });
+        }
+
+        // Find the project by ID
+        const project = await Project.findById(projectId);
+
+        // Check if the project exists
+        if (!project) {
+            return res.status(404).send({ error: 'Project not found.' });
+        }
+
+        // Update reviewer_id
+        project.reviewer_id = reviewerId;
+
+        // Save the updated project to the database
+        await project.save();
+
+        res.status(200).send({ message: 'Project reviewed successfully!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+};
+
+exports.approveProject = async (req, res) => {
+    try {
+        const { projectId, approverId } = req.body;
+
+        // Check if the authenticated user is an approver
+        if (req.user.role !== 'approver') {
+            return res.status(403).send({ error: 'Unauthorized. Only Approvers can approve projects.' });
+        }
+
+        // Find the project by ID
+        const project = await Project.findById(projectId);
+
+        // Check if the project exists
+        if (!project) {
+            return res.status(404).send({ error: 'Project not found.' });
+        }
+
+        // Update approver_id
+        project.approver_id = approverId;
+
+        // Save the updated project to the database
+        await project.save();
+
+        res.status(200).send({ message: 'Project approved successfully!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
 };

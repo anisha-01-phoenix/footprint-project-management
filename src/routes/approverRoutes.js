@@ -1,5 +1,9 @@
 const express = require("express")
-const { signin, signout, signup, verify_email } = require("../controllers/approverController");
+const { 
+    signin, 
+    signout, 
+    signup, 
+    verify_email } = require("../controllers/approverController");
 const { check } = require("express-validator")
 const approverAuth = require("../middleware/approverMiddleware")
 

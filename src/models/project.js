@@ -1,10 +1,6 @@
 const mongoose = require('mongoose');
 
 const projectSchema = new mongoose.Schema({
-    project_id: {
-        type: Number,
-        unique: true
-    },
     title: {
         type: String,
         required: true
@@ -17,13 +13,27 @@ const projectSchema = new mongoose.Schema({
         enum: ["Review", "Approved", "Rejected", "Ongoing", "Completed"],
         required: true
     },
-    start_date: { type: Date },
-    end_date: { type: Date },
-    manager_id: { type: Number },
-    reviewer_id: { type: Number },
-    approver_id: { type: Number },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user',
+        required: true,
+    },
+    apostolate: {
+        type: String,
+        required: true,
+    },
+    documents: [
+        {
+            name: {
+                type: String,
+                required: true,
+            },
+            file: {
+                type: Buffer,
+                required: true,
+            },
+        },
+    ],
 });
 
-const Project = mongoose.model('Project', projectSchema);
-
-module.exports = Project;
+module.exports = mongoose.model('Project', projectSchema);;

@@ -84,7 +84,7 @@ exports.verify_email = async (req, res) => {
         const decodedToken = await jwtVerify(token, process.env.JWT_SECRET);
 
         const { name, email, mobile, provinceName, password, otpCoded } = decodedToken;
-
+        console.log(decodedToken);
         if (otp.toString() === otpCoded.toString()) {
             const reviewer = new Reviewer({ name, email, mobile, provinceName, password });
 
@@ -94,6 +94,10 @@ exports.verify_email = async (req, res) => {
                 message: "User Registered. Signin to Continue",
                 reviewer: savedReviewer
             });
+        }
+        else 
+        {
+            throw new Error("Incorrect OTP");
         }
     } catch (error) {
         console.error("Error:", error);

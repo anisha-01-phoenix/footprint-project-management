@@ -81,7 +81,7 @@ exports.verify_email = async (req, res) => {
         }
 
         const decodedToken = await jwtVerify(token, process.env.JWT_SECRET);
-
+        console.log(decodedToken);
         const { name, email, mobile, password, otpCoded } = decodedToken;
 
         if (otp.toString() === otpCoded.toString()) {

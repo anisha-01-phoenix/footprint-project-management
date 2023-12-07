@@ -1,35 +1,15 @@
-const express = require('express');
-const { authenticateToken, authorizeRole } = require('../middleware/userMiddleware');
-const {
-  submitProjectApplication,
-  reviewProjectApplication,
-  approveOrRejectProjectApplication,
-} = require('../controllers/projectController');
+// const express = require('express');
+// const router = express.Router();
+// const userMiddleware = require('../middleware/userMiddleware');
+// const projectController = require('../controllers/projectController');
 
-const router = express.Router();
+// // Routes for handling project-related operations
 
-router.post('/submit', async (req, res, next) => {
-  try {
-    await submitProjectApplication(req, res);
-  } catch (error) {
-    next(error); 
-  }
-});
+// router.get('/projects', userMiddleware, projectController.getAllProjects);
+// router.get('/projects/:projectId', userMiddleware, projectController.getProjectDetails);
+// router.post('/projects', userMiddleware, projectController.createProject);
+// router.put('/projects/:projectId', userMiddleware, projectController.updateProject);
+// router.delete('/projects/:projectId', userMiddleware, projectController.deleteProject);
 
-router.post('/review', async (req, res, next) => {
-  try {
-    await reviewProjectApplication(req, res);
-  } catch (error) {
-    next(error); 
-  }
-});
+// module.exports = router;
 
-router.post('/approve-reject', async (req, res, next) => {
-  try {
-    await approveOrRejectProjectApplication(req, res);
-  } catch (error) {
-    next(error); 
-  }
-});
-
-module.exports = router;
