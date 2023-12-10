@@ -4,27 +4,36 @@ const {
     createProject, 
     editProject, 
     deleteProject, 
+    getAllApprovedProjects,
+    getAllReviewedProjects,
+    getAllSubmittedProjects,
+    addComments,
     getAllUserProjects, 
     getAllProjectsbyApostolate,  
     getAllProjects} = require('../controllers/projectController');
 const userAuth = require('../middleware/userMiddleware');
 const auth = require('../middleware/authMiddleware');
 
-// Create Project
+// Create New Project (only User)
 router.post('/create', userAuth, createProject);
 
-// Edit Project
-router.put('/edit/:projectId', auth, editProject);
+// Edit Project (only User)
+router.put('/edit/:projectId', userAuth, editProject);
 
 // Delete Project
-router.delete('/delete/:projectId', auth, deleteProject);
+router.delete('/delete/:projectId', userAuth, deleteProject);
 
-// Show all Projects for the currently logged-in user
-router.get('/allUserProjects', userAuth, getAllUserProjects);
+// Get all approved Projects
+router.get('/allApprovedProjects', getAllApprovedProjects);
 
-// Show all Projects for a specific apostolate 
-router.post('/allProjectsByApostolate', auth, getAllProjectsbyApostolate);
+// Get all reviewed Projects
+router.get('/allReviewedProjects', getAllReviewedProjects);
 
-router.get('/allProjects', auth, getAllProjects);
+// Get all submitted Projects
+router.get('/allSubmittedProjects', getAllSubmittedProjects);
+
+//Add comments
+router.put('/addComments/:projectId', auth, addComments);
+
 
 module.exports = router;

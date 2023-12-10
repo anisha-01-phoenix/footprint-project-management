@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const projectSchema = new mongoose.Schema({
+    project_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: mongoose.Types.ObjectId,
+        unique: true,
+    },
     title: {
         type: String,
         required: true
@@ -15,25 +20,30 @@ const projectSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["Review", "Approved", "Rejected", "Ongoing", "Completed"],
+        enum: ["Submitted", "Approved", "Under Approval", "Under Review", "Reviewed", "Rejected"],
         required: true
     },
     apostolate: {
         type: String,
         required: true,
     },
-    documents: 
+    budget: {
+        type: String,
+        required: true,
+    },
+    monthly_report: {
+        finance: 
         {
-            // name: {
-                type: String,
-                required: true,
-            // },
-            // file: {
-            //     type: Buffer,
-            //     required: true,
-            // },
+            type: String
         },
-    
+        activity:
+        {
+            type: String
+        }
+    },
+    comments : [{
+        type: String
+    }]
 });
 
 module.exports = mongoose.model('Project', projectSchema);;
