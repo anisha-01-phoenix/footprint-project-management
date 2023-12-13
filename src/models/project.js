@@ -16,7 +16,12 @@ const projectSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user',
-        required: true,
+        required: true
+    },
+    reviewerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'reviewer',
+        required: true
     },
     status: {
         type: String,

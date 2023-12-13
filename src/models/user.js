@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         maxlength: 32,
-        trim: true
+        unique: false
     },
     email: {
         type: String,
@@ -32,7 +32,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-
+    reviewer_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'reviewer',
+        required: true,
+    },
     apostolate: {
         type: String,
         enum: ['social', 'education', 'health', 'others'],

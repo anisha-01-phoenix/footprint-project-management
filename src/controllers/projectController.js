@@ -15,7 +15,8 @@ exports.createProject = async (req, res) => {
         const user = await User.findById(userId);
         const apostolate = user.apostolate;
         const project_id = new ObjectId();
-        const project = new Project({ project_id, title, description, userId, status: "Submitted", apostolate, budget, monthly_report, comments: [] });
+        const reviewerId = user.reviewer_id;
+        const project = new Project({ project_id, title, description, userId, reviewerId, status: "Submitted", apostolate, budget, monthly_report, comments: [] });
         await project.save();
 
         res.status(201).json({ message: 'Project created successfully', project });
@@ -102,7 +103,31 @@ exports.getAllReviewedProjects = async (req, res) => {
 
 exports.getAllSubmittedProjects = async (req, res) => {
     try {
-        const projects = await Project.find({ status: "Submitted" });
+        const token = req.cookies.token;
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        const reviewerId = decodedToken._id;
+        const projects = await Project.find({ status: "Submitted", reviewerId: reviewerId });
+        
+        res.status(200).json({ projects });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getAllUnderApprovalProjects = async (req, res) => {
+    try {
+        const projects = await Project.find({ status: "Under Approval" });
+        res.status(200).json({ projects });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getAllUnderReviewedProjects = async (req, res) => {
+    try {
+        const projects = await Project.find({ status: "Under Review" });
         res.status(200).json({ projects });
     } catch (error) {
         console.error(error);
@@ -120,7 +145,7 @@ exports.addComments = async (req, res) => {
         }
 
         project.comments.push(comment);
-
+        project.status = "Under Review";
         await project.save();
 
         res.status(200).json({ message: 'Comment added', project });

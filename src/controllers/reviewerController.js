@@ -91,7 +91,7 @@ exports.verify_email = async (req, res) => {
             const savedReviewer = await reviewer.save();
 
             return res.status(200).json({
-                message: "User Registered. Signin to Continue",
+                message: "User Registered. Wait till the Approver approves.",
                 reviewer: savedReviewer
             });
         }

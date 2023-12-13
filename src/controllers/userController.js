@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const Reviewer = require("../models/reviewer");
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
@@ -17,9 +18,9 @@ exports.signup = async (req, res) => {
         }
         
         const user_id = new ObjectId();
-        const { email, username, mobile, provinceName, provincialSuperiorName, apostolate, password } = req.body;
+        const { email, username, mobile, provinceName, apostolate, password } = req.body;
 
-        if (!email || !password || !username || !mobile || !provinceName || !provincialSuperiorName || !apostolate) {
+        if (!email || !password || !username || !mobile || !provinceName || !apostolate) {
             return res.status(400).json({
                 error: "Data Incomplete",
             });
@@ -32,10 +33,23 @@ exports.signup = async (req, res) => {
             });
         }
 
+        const reviewerInProvince = await Reviewer.findOne({
+            provinceName: provinceName,
+        }).exec();
+
+        console.log(reviewerInProvince);
+        if(!reviewerInProvince) 
+        {
+            return res.status(400).json({
+                error: "Province does not Exist",
+            });
+        }
+        const provincialSuperiorName = reviewerInProvince.name;
+        const reviewer_id = reviewerInProvince._id;
         const otp = Math.floor(((Math.random() * 1000000) + 100000) % 1000000);
 
         const token = jwt.sign({
-            user_id, username, email, mobile, provinceName, provincialSuperiorName, apostolate, password, otpCoded: otp,
+            user_id, username, email, mobile, provinceName, provincialSuperiorName, reviewer_id, apostolate, password, otpCoded: otp,
         }, process.env.JWT_SECRET);
 
         const transporter = nodemailer.createTransport({
@@ -76,16 +90,19 @@ exports.verify_email = async (req, res) => {
         }
 
         const decodedToken = await jwtVerify(token, process.env.JWT_SECRET);
-        const { user_id, username, email, mobile, provinceName, provincialSuperiorName, apostolate, password, otpCoded } = decodedToken;
+        const { user_id, username, email, mobile, provinceName, provincialSuperiorName, reviewer_id, apostolate, password, otpCoded } = decodedToken;
         console.log(decodedToken);
         if (otp.toString() === otpCoded.toString()) {
-            const user = new User({ user_id, username, email, mobile, provinceName, provincialSuperiorName, apostolate, password });
+            const user = new User({ user_id, username, email, mobile, provinceName, provincialSuperiorName, reviewer_id, apostolate, password });
             const savedUser = await user.save();
             
             return res.status(200).json({
                 message: "User Registered. Sign in to Continue",
                 user: savedUser,
             });
+        }
+        else {
+            throw new Error("Incorrect OTP");
         }
     } catch (error) {
         console.error("Error:", error);
@@ -121,11 +138,11 @@ exports.signin = (req, res) => {
 
             res.cookie('token', token, { expire: new Date() + 1 })
 
-            const { _id, name, email, mobile, provinceName, provincialSuperiorName, apostolate } = user
+            const { _id, name, email, mobile, provinceName, provincialSuperiorName, reviewer_id, apostolate } = user
             return res.json({
                 token,
                 user: {
-                    _id, name, email, mobile, provinceName, provincialSuperiorName, apostolate
+                    _id, name, email, mobile, provinceName, provincialSuperiorName, reviewer_id, apostolate
                 }
             })
 
