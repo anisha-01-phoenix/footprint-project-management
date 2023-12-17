@@ -1,5 +1,7 @@
 const express = require('express');
 const { connectToDatabase } = require('./src/utils/dbConnect');
+const { initDatabase } = require('./dbInitialisation');
+const { query } = require('./db');
 const routes = require('./src/routes');
 
 const cookieParser = require('cookie-parser');
@@ -10,11 +12,16 @@ require('dotenv').config();
 
 app.use(express.json());
 app.use(cookieParser());
-connectToDatabase();
-
 app.use('/', routes);
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+connectToDatabase();
+initDatabase()
+    .then(() => {
+        app.listen(PORT, () => {
+          console.log(`Server is running on port ${PORT}`);
+        });
+    })
+    .catch((error) => {
+        console.error('Database initialization error:', error);
+        process.exit(1);
+    });

@@ -1,79 +1,40 @@
-const mongoose = require("mongoose")
-const crypto = require("crypto");
 const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
+const mysql = require('mysql2/promise');
+const bcrypt = require('bcrypt');
+const { query } = require('../../db'); 
 
-const userSchema = new mongoose.Schema({
-    user_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        default: mongoose.Types.ObjectId,
-        unique: true,
-    },
-    username: {
-        type: String,
-        required: true,
-        maxlength: 32,
-        unique: false
-    },
-    email: {
-        type: String,
-        trim: true,
-        required: true,
-        unique: true
-    },
-    mobile: {
-        type: String,
-        required: true
-    },
-    provinceName: {
-        type: String,
-        required: true
-    },
-    provincialSuperiorName: {
-        type: String,
-        required: true
-    },
-    reviewer_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'reviewer',
-        required: true,
-    },
-    apostolate: {
-        type: String,
-        enum: ['social', 'education', 'health', 'others'],
-        required: true
-    },
-    
-    encrypted_password: {
-        type: String,
-    },
-    verified: String,
-    salt: String,
-}, { timestamps: true })
+const connection = mysql.createPool({
+  host: process.env.HOST,
+  user: process.env.USER,
+  password: process.env.PASSWORD.replace(/%23/g, '#'),
+  database: process.env.DATABASE,
+});
 
-userSchema.virtual("password")
-    .set(function (password) {
-        this._password = password
-        this.salt = uuidv4()
-        this.encrypted_password = this.securePassword(password)
-    })
-    .get(function () {
-        return this._password
-    })
+const hashPassword = async (password, saltRounds = 10) => {
+  const salt = await bcrypt.genSalt(saltRounds);
+  const hashedPassword = await bcrypt.hash(password, salt);
+  return { hashedPassword, salt };
+};
 
-userSchema.methods = {
-    authenticate: function (rawPassword) {
-        return this.encrypted_password === this.securePassword(rawPassword)
-    },
-    securePassword: function (rawPassword) {
-        if (!rawPassword) return "";
+const createUser = async (userData) => {
+  const { user_id, username, email, mobile, provinceName, provincialSuperiorName, reviewer_id, apostolate, password } = userData;
+  
+  const { hashedPassword, salt } = await hashPassword(password);
+  
+  const sql = `
+    INSERT INTO users 
+      (user_id, username, email, mobile, provinceName, provincialSuperiorName, reviewer_id, apostolate, password, salt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
 
-        try {
-            return crypto.createHmac("sha256", this.salt).update(rawPassword).digest("hex")
-        } catch (e) {
-            console.log(e);
-            return e;
-        }
-    },
-}
+  await query(sql, [user_id, username, email, mobile, provinceName, provincialSuperiorName, reviewer_id, apostolate, hashedPassword, salt]);
+};
 
-module.exports = mongoose.model("User", userSchema)
+const findUserByEmail = async (email) => {
+  const sql = 'SELECT * FROM users WHERE email = ?';
+  const [rows] = await query(sql, [email]);
+  return rows[0];
+};
+
+module.exports = { createUser, findUserByEmail };

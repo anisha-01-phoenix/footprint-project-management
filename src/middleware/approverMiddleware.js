@@ -1,15 +1,13 @@
 const jwt = require("jsonwebtoken");
-const Approver = require("../models/approver");
-require("express-validator");
-require('express-jwt');
+const { query } = require("../../db");
 
 const auth = async (req, res, next) => {
   try {
     const token = req.header("Authorization").replace('Bearer ', '');
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    const getApproverQuery = 'SELECT * FROM approvers WHERE approver_id = ?';
+    const [approver] = await query(getApproverQuery, [decodedToken.id]);
 
-    const approver = await Approver.findOne({ '_id': decodedToken._id }).exec();
-    
     if (!approver) {
       res.status(401).send({
         error: "Please Authenticate"
@@ -17,8 +15,8 @@ const auth = async (req, res, next) => {
     } else {
       next();
     }
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.log(error);
     res.status(401).send({
       error: "Please Authenticate"
     });

@@ -1,57 +1,41 @@
-const mongoose = require("mongoose")
-const crypto = require("crypto");
 const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
+const mysql = require('mysql2/promise');
+const bcrypt = require('bcrypt');
+const { query } = require('../../db'); 
 
-const approverSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-        maxlength: 32,
-        trim: true
-    },
-    email: {
-        type: String,
-        trim: true,
-        required: true,
-        unique: true
-    },
-    mobile: {
-        type: String,
-        trim: true,
-        required: true,
-        unique: true
-    },
-    encrypted_password: {
-        type: String,
-        required: true
-    },
-    salt: String,
-}, { timestamps: true })
+const connection = mysql.createPool({
+  host: process.env.HOST,
+  user: process.env.USER,
+  password: process.env.PASSWORD.replace(/%23/g, '#'),
+  database: process.env.DATABASE,
+});
 
-approverSchema.virtual("password")
-    .set(function (password) {
-        this._password = password
-        this.salt = uuidv4()
-        this.encrypted_password = this.securePassword(password)
-    })
-    .get(function () {
-        return this._password
-    })
+const hashPassword = async (password, saltRounds = 10) => {
+  const salt = await bcrypt.genSalt(saltRounds);
+  const hashedPassword = await bcrypt.hash(password, salt);
+  return { hashedPassword, salt };
+};
 
-approverSchema.methods = {
-
-    authenticate: function (password) {
-        return this.encrypted_password === this.securePassword(password)
-    },
-    securePassword: function (password) {
-        if (!password) return "";
-
-        try {
-            return crypto.createHmac("sha256", this.salt).update(password).digest("hex")
-        } catch (e) {
-            return e;
-        }
-    },
-}
-
-module.exports = mongoose.model("Approver", approverSchema)
+const createApprover = async (approverData) => {
+    const { approver_id, name, email, mobile, password } = approverData;
+    
+    const { hashedPassword, salt } = await hashPassword(password);
+    
+    const sql = `
+      INSERT INTO approvers 
+        (approver_id, name, email, mobile, password, salt)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+  
+    await query(sql, [approver_id, name, email, mobile, hashedPassword, salt]);
+  };
+  
+  const findApproverByEmail = async (email) => {
+    const sql = 'SELECT * FROM approvers WHERE email = ?';
+    const [rows] = await query(sql, [email]);
+    return rows[0];
+  };
+  
+  module.exports = { createApprover, findApproverByEmail };
+  

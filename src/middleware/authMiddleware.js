@@ -1,7 +1,5 @@
 const jwt = require("jsonwebtoken");
-const Approver = require("../models/approver");
-const Reviewer = require("../models/reviewer");
-const User = require("../models/user");
+const { query } = require("../../db");
 require('express-jwt');
 
 const auth = async (req, res, next) => {
@@ -9,9 +7,13 @@ const auth = async (req, res, next) => {
         const token = req.header("Authorization").replace('Bearer ', '');
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-        const approver = await Approver.findOne({ '_id': decodedToken._id }).exec();
-        const reviewer = await Reviewer.findOne({ '_id': decodedToken._id }).exec();
-        const user = await User.findOne({ '_id': decodedToken._id }).exec();
+        const getApproverQuery = 'SELECT * FROM approvers WHERE approver_id = ?';
+        const getReviewerQuery = 'SELECT * FROM reviewers WHERE reviewer_id = ?';
+        const getUserQuery = 'SELECT * FROM users WHERE user_id = ?';
+
+        const [approver] = await query(getApproverQuery, [decodedToken.id]);
+        const [reviewer] = await query(getReviewerQuery, [decodedToken.id]);
+        const [user] = await query(getUserQuery, [decodedToken.id]);
 
         if (!approver && !reviewer && !user) {
             res.status(401).send({

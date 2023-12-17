@@ -1,11 +1,13 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/user");
+const { query } = require("../../db");
 
 const auth = async (req, res, next) => {
   try {
     const token = req.header("Authorization").replace('Bearer ', '');
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({ '_id': decodedToken._id });
+    // console.log(decodedToken.id);
+    const getUserQuery = 'SELECT * FROM users WHERE user_id = ?';
+    const [user] = await query(getUserQuery, [decodedToken.id]);
 
     if (!user) {
       res.status(401).send({
