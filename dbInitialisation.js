@@ -4,6 +4,7 @@ const initDatabase = async () => {
     await createUsersTable();
     await createReviewersTable(); 
     await createApproversTable(); 
+    await createProjectsTable();
 };
 
 const createUsersTable = async () => {
@@ -51,6 +52,27 @@ const createApproversTable = async () => {
         );
     `;
     await query(createApproverTableQuery);
+};
+
+const createProjectsTable = async () => {
+    const createProjectsTableQuery = `
+        CREATE TABLE IF NOT EXISTS projects (
+            project_id INT PRIMARY KEY AUTO_INCREMENT,
+            title VARCHAR(255) NOT NULL,
+            description TEXT,
+            userId INT NOT NULL,
+            reviewerId INT NOT NULL,
+            status ENUM('Submitted', 'Approved', 'Under Approval', 'Under Review', 'Reviewed', 'Rejected') NOT NULL,
+            apostolate VARCHAR(255) NOT NULL,
+            budget VARCHAR(255) NOT NULL,
+            monthly_report_finance TEXT,
+            monthly_report_activity TEXT,
+            comments JSON,
+            FOREIGN KEY (userId) REFERENCES users(user_id),
+            FOREIGN KEY (reviewerId) REFERENCES reviewers(reviewer_id)
+        );    
+    `;
+    await query(createProjectsTableQuery);
 };
 
 
