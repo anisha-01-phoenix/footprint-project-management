@@ -17,7 +17,8 @@ const auth = async (req, res, next) => {
 
         if (!approver && !reviewer && !user) {
             res.status(401).send({
-                error: "Please Authenticate"
+                error: "Please Authenticate",
+                success: false,
             });
         } else {
             next();
@@ -25,7 +26,8 @@ const auth = async (req, res, next) => {
     } catch (e) {
         console.log(e);
         res.status(401).send({
-            error: "Please Authenticate"
+            error: "Please Authenticate",
+            success: false,
         });
     }
 };

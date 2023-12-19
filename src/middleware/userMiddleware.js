@@ -11,7 +11,8 @@ const auth = async (req, res, next) => {
 
     if (!user) {
       res.status(401).send({
-        error: "Please Authenticate"
+        error: "Please Authenticate",
+        success: false,
       });
     } else {
       next();
@@ -19,7 +20,8 @@ const auth = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     res.status(401).send({
-      error: "Please Authenticate"
+      error: "Please Authenticate",
+      success: false,
     });
   }
 };

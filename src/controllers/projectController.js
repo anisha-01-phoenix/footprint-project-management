@@ -25,7 +25,10 @@ exports.createProject = async (req, res) => {
         // console.log(userRows);
 
         if (user.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({
+                error: 'User not found',
+                success: false,
+            });
         }
 
         // const user = userRows[0];
@@ -50,10 +53,16 @@ exports.createProject = async (req, res) => {
             JSON.stringify([]),
         ]);
 
-        res.status(201).json({ message: 'Project created successfully' });
+        res.status(201).json({
+            message: 'Project created successfully',
+            success: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            success: false,
+        });
     }
 };
 
@@ -69,7 +78,10 @@ exports.editProject = async (req, res) => {
         const [projectRows] = await query('SELECT * FROM projects WHERE project_id = ? AND userId = ?', [projectId, userId]);
 
         if (projectRows.length === 0) {
-            return res.status(404).json({ error: 'Project not found' });
+            return res.status(404).json({
+                error: 'Project not found',
+                success: false,
+            });
         }
 
         const updateSql = `
@@ -87,10 +99,17 @@ exports.editProject = async (req, res) => {
 
         const updatedProject = updatedProjectRows[0];
 
-        res.status(200).json({ message: 'Project updated successfully', project: updatedProject });
+        res.status(200).json({
+            message: 'Project updated successfully',
+            project: updatedProject,
+            success: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            success: false,
+        });
     }
 };
 
@@ -110,10 +129,16 @@ exports.deleteProject = async (req, res) => {
 
         await query('DELETE FROM projects WHERE project_id = ? AND userId = ?', [projectId, userId]);
 
-        res.status(200).json({ message: 'Project deleted successfully' });
+        res.status(200).json({
+            message: 'Project deleted successfully',
+            success: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            success: false,
+        });
     }
 };
 
@@ -121,10 +146,16 @@ exports.getAllApprovedProjects = async (req, res) => {
     try {
         const [projectsRows] = await query('SELECT * FROM projects WHERE status = ?', ['Approved']);
 
-        res.status(200).json({ projects: projectsRows });
+        res.status(200).json({
+            projects: projectsRows,
+            success: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            success: false,
+        });
     }
 };
 
@@ -132,10 +163,16 @@ exports.getAllReviewedProjects = async (req, res) => {
     try {
         const [projectsRows] = await query('SELECT * FROM projects WHERE status = ?', ['Reviewed']);
 
-        res.status(200).json({ projects: projectsRows });
+        res.status(200).json({
+            projects: projectsRows,
+            success: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            success: false,
+        });
     }
 };
 
@@ -148,10 +185,16 @@ exports.getAllSubmittedProjects = async (req, res) => {
 
         const [projectsRows] = await query('SELECT * FROM projects WHERE status = ? AND reviewerId = ?', ['Submitted', reviewerId]);
 
-        res.status(200).json({ projects: projectsRows });
+        res.status(200).json({
+            projects: projectsRows,
+            success: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            success: false,
+        });
     }
 };
 
@@ -159,10 +202,16 @@ exports.getAllUnderApprovalProjects = async (req, res) => {
     try {
         const [projectsRows] = await query('SELECT * FROM projects WHERE status = ?', ['Under Approval']);
 
-        res.status(200).json({ projects: projectsRows });
+        res.status(200).json({
+            projects: projectsRows,
+            success: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            success: false,
+        });
     }
 };
 
@@ -170,10 +219,16 @@ exports.getAllUnderReviewedProjects = async (req, res) => {
     try {
         const [projectsRows] = await query('SELECT * FROM projects WHERE status = ?', ['Under Review']);
 
-        res.status(200).json({ projects: projectsRows });
+        res.status(200).json({
+            projects: projectsRows,
+            success: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            success: false,
+        });
     }
 };
 
@@ -186,7 +241,10 @@ exports.addComments = async (req, res) => {
         // const project = projectRows[0];
 
         if (!project) {
-            return res.status(404).json({ error: 'Project not found' });
+            return res.status(404).json({
+                error: 'Project not found',
+                success: false,
+            });
         }
         let existingComments = [];
         if (project.comments) {
@@ -197,10 +255,17 @@ exports.addComments = async (req, res) => {
 
         await query('UPDATE projects SET comments = ?, status = ? WHERE project_id = ?', [JSON.stringify(existingComments), 'Under Review', projectId]);
 
-        res.status(200).json({ message: 'Comment added', project });
+        res.status(200).json({
+            message: 'Comment added',
+            project,
+            success: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            success: false,
+        });
     }
 };
 
@@ -212,19 +277,31 @@ exports.getAllUserProjects = async (req, res) => {
 
         const [projects] = await query('SELECT * FROM projects WHERE userId = ?', [userId]);
 
-        res.status(200).json({ projects });
+        res.status(200).json({
+            projects,
+            success: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            success: false,
+        });
     }
 };
 exports.getAllProjects = async (req, res) => {
     try {
         const [projects] = await query('SELECT * FROM projects');
 
-        res.status(200).json({ projects });
+        res.status(200).json({
+            projects,
+            success: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message,
+            success: false,
+        });
     }
 };
