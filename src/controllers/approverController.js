@@ -43,7 +43,7 @@ exports.signup = async (req, res) => {
             });
         }
 
-        const otp = Math.floor(((Math.random() * 1000000) + 100000) % 1000000);
+        const otp = Math.floor(100000 + Math.random() * 900000);
 
         const token = jwt.sign({
             name, email, mobile, password, otpCoded: otp,

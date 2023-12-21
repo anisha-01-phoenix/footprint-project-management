@@ -57,7 +57,7 @@ exports.signup = async (req, res) => {
         const reviewerInProvince = reviewerInProvinceResult[0];
         const provincialSuperiorName = reviewerInProvince.name;
         const reviewer_id = reviewerInProvince.reviewer_id;
-        const otp = Math.floor(((Math.random() * 1000000) + 100000) % 1000000);
+        const otp = Math.floor(100000 + Math.random() * 900000);
 
         const token = jwt.sign({
             username, email, mobile, provinceName, provincialSuperiorName, reviewer_id, apostolate, password, otpCoded: otp,
